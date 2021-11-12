@@ -89,10 +89,16 @@ public class Terminal {
     }
 
     public void mkdir(String[] arg) {
-
+        for (int i = 0; i < arg.length; ++i) {
+            if (new File(arg[i]).isAbsolute()) {
+                new File(arg[i]).mkdir();
+            } else {
+                new File(file.getPath() + File.separator + arg[i]).mkdir();
+            }
+        }
     }
 
     public static void main(String[] args) {
-
+        System.out.println("Hello World!");
     }
 }
