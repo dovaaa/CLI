@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-=======
-
 import java.util.ArrayList;
 
 class Parser{
@@ -69,8 +66,4 @@ public class Terminal {
     public static void main(String[] args){
 
     }
-
-    public static void main(String[] args){}
-
 }
->>>>>>> 1f0bd9e84dab00a4eb5aa997d497f31a340ec297
