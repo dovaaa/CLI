@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,7 +51,7 @@ public class Terminal {
     public String echo(String[] arg) {
         String ret = "";
         for (int i = 1; i < arg.length; ++i) {
-            ret+= arg[i] + ' ';
+            ret += arg[i] + ' ';
         }
         return ret;
     }
@@ -67,12 +68,20 @@ public class Terminal {
         if (arg.equals("..")) {
             file = new File(file.getPath() + File.separator + ".." + File.separator);
         } else {
-            if (new File(arg).exists()) {
-                file = new File(arg);
-            } else if (new File(file.getPath() + File.separator + arg).exists()) {
-                file = new File(file.getPath() + File.separator + arg);
+            if (new File(arg).isAbsolute()) {
+                File f = new File(arg);
+                if (f.exists()) {
+                    file = f;
+                } else {
+                    return false;
+                }
             } else {
-                return false;
+                File f = new File(file.getPath() + File.separator + arg);
+                if (f.exists()) {
+                    file = f;
+                } else {
+                    return false;
+                }
             }
         }
         return true;
@@ -97,7 +106,47 @@ public class Terminal {
     }
 
     public void mkdir(String[] arg) {
+        for (int i = 0; i < arg.length; ++i) {
+            if (new File(arg[i]).isAbsolute()) {
+                new File(arg[i]).mkdir();
+            } else {
+                new File(file.getPath() + File.separator + arg[i]).mkdir();
+            }
+        }
+    }
 
+    public String rmdir(String arg) {
+        String ret = "";
+        if (arg.equals("*")) {
+            boolean atleastOneDeletion = false;
+            File[] filesList = file.listFiles();
+            for (int i = 0; i < filesList.length; ++i) {
+                if (filesList[i].length() == 0) {
+                    filesList[i].delete();
+                    atleastOneDeletion = true;
+                }
+            }
+            if (!atleastOneDeletion) {
+                ret = "There isn't empty files.";
+            } else {
+                ret = "deletion completed";
+            }
+        } else {
+            File f = new File(arg);
+            if (!f.isAbsolute()) {
+                f = new File(file.getPath() + File.separator + arg);
+            }
+            if (f.exists()) {
+                if (f.length() == 0) {
+                    f.delete();
+                } else {
+                    ret = arg + " is not empty.";
+                }
+            } else {
+                ret = arg + " is not found.";
+            }
+        }
+        return ret;
     }
 
     //This method will choose the suitable command method to be called
