@@ -172,14 +172,28 @@ public class Terminal {
 
     void outputExecution(String output, int type) throws IOException {
         String[] args = parser.getArgs();
+
         if (type == 0) {
             System.out.println(output);
         } else if (type == 1) {
             FileWriter fileWriter = new FileWriter(args[args.length - 1]);
+            String[] str = output.split(" ");
+            String[] sub = Arrays.copyOfRange(str,0,str.length-2);
+            output="";
+            for(String in:sub){
+                output+=in+" ";
+            }
             fileWriter.write(output + '\n');
             fileWriter.close();
         } else {
             FileOutputStream fos = new FileOutputStream(args[args.length - 1], true);
+            String[] str = output.split(" ");
+            String[] sub = Arrays.copyOfRange(str,0,str.length-2);
+            output="";
+            for(String in:sub){
+                output+=in+" ";
+            }
+            output+="\n";
             fos.write(output.getBytes());
             fos.close();
         }
@@ -195,24 +209,30 @@ public class Terminal {
                 outputExecution(echo(args), argsCheck(args));
                 break;
             case "pwd":
-                if (argsCheck(args) == 1) {
-                    FileWriter W = new FileWriter(args[args.length - 1]);
-                    W.write(pwd());
-                    W.flush();
-                    W.close();
-                    break;
-                } else if (argsCheck(args) == 2) {
-
+                outputExecution(pwd(),argsCheck(args));
+                break;
+            case "cd":
+                if(args.length==0){
+                    cd();
+                }else{
+                    cd(args[1]);
                 }
-                pwd();
                 break;
             case "ls":
+                if(args.length==0){
+                    outputExecution(ls(),argsCheck(args));
+                }else{
+                    outputExecution(ls_r(),argsCheck(args));
+                }
                 break;
             case "mkdir":
+                mkdir(args);
                 break;
             case "rmdir":
+                rmdir(args[1]);
                 break;
             case "touch":
+
                 break;
             case "cp":
                 break;
@@ -235,7 +255,7 @@ public class Terminal {
 
     public static void main(String[] args) throws IOException {
         Terminal terminal = new Terminal();
-        terminal.parser.parse("echo Hello World");
+        terminal.parser.parse("echo Hello World >> echo.txt");
         terminal.chooseCommandAction();
     }
 }
