@@ -150,6 +150,26 @@ public class Terminal {
         return ret;
     }
 
+    public boolean touch(String arg) throws IOException {
+        File f;
+        if (new File(arg).isAbsolute()) {
+            f = new File(arg);
+        } else {
+            f = new File(file.getPath() + File.separator + arg);
+        }
+        if (!f.exists()) {
+            f.mkdir();
+        }
+        boolean created = f.createNewFile();
+        return created;
+    }
+
+    public void cp(String arg1, String arg2) throws IOException {
+        File f1 = new File(arg1);
+        File f2 = new File(arg2);
+        Files.copy(f1.toPath(), f2.toPath());
+    }
+
     void outputExecution(String output, int type) throws IOException {
         String[] args = parser.getArgs();
         if (type == 0) {
