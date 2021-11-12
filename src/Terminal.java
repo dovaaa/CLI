@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -149,6 +150,21 @@ public class Terminal {
         return ret;
     }
 
+    void outputExecution(String output, int type) throws IOException {
+        String[] args = parser.getArgs();
+        if (type == 0) {
+            System.out.println(output);
+        } else if (type == 1) {
+            FileWriter fileWriter = new FileWriter(args[args.length - 1]);
+            fileWriter.write(output + '\n');
+            fileWriter.close();
+        } else {
+            FileOutputStream fos = new FileOutputStream(args[args.length - 1], true);
+            fos.write(output.getBytes());
+            fos.close();
+        }
+    }
+
     //This method will choose the suitable command method to be called
     public void chooseCommandAction() throws IOException {
         String command = parser.getCommandName();
@@ -156,17 +172,7 @@ public class Terminal {
 
         switch (command) {
             case "echo":
-
-                if (argsCheck(args) == 1) {
-                    FileWriter W = new FileWriter(args[args.length - 1]);
-                    W.write(echo(args));
-                    W.flush();
-                    W.close();
-                    break;
-                } else if (argsCheck(args) == 2) {
-
-                }
-                System.out.println(echo(args));
+                outputExecution(echo(args), argsCheck(args));
                 break;
             case "pwd":
                 if (argsCheck(args) == 1) {
