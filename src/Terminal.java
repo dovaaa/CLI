@@ -1,11 +1,13 @@
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
-class Parser {
+class Parser{
 
     String commandName;
     String[] args;
@@ -14,23 +16,21 @@ class Parser {
     //where "input" is the string command entered by the user
 
 
-    public boolean parse(String input) {
-        if (input.equals("")) return false;
+    public boolean parse(String input){
+        if(input.equals(""))return false;
         String[] list = input.split(" ");
-        commandName = list[0];
+        commandName=list[0];
         for (int i = 1; i < list.length; i++) {
-            args[i] = list[i];
+            args[i]=list[i];
         }
         return true;
     }
 
-    public String getCommandName() {
+    public String getCommandName(){
         return commandName;
     }
 
-    public String[] getArgs() {
-        return args;
-    }
+    public String[] getArgs(){return args;}
 
 }
 
@@ -88,11 +88,69 @@ public class Terminal {
         return ret;
     }
 
-    public void mkdir(String[] arg) {
+    //This method will choose the suitable command method to be called
+    public void chooseCommandAction() throws IOException {
+        String command=parser.getCommandName();
+        String[] args=parser.getArgs();
 
-    }
+        switch (command) {
+            case "echo":
 
-    public static void main(String[] args) {
+                if (argsCheck(args) == 1) {
+                    FileWriter W = new FileWriter(args[args.length - 1]);
+                    W.write(echo(args[0]));
+                    W.flush();
+                    W.close();
+                    break;
+                } else if (argsCheck(args) == 2) {
 
-    }
+                }
+                System.out.println(echo(args[0]));
+                break;
+            case "pwd":
+                if (argsCheck(args) == 1) {
+                    FileWriter W = new FileWriter(args[args.length - 1]);
+                    W.write(pwd());
+                    W.flush();
+                    W.close();
+                    break;
+                } else if (argsCheck(args) == 2) {
+
+                }
+                pwd();
+                break;
+            case "ls":
+                break;
+            case "mkdir":
+                break;
+            case "rmdir":
+                break;
+            case "touch":
+                break;
+            case "cp":
+                break;
+            case "rm":
+                break;
+            case "cat":
+                break;
+            default:
+                System.out.println("No valid Command");
+
+        }
+        }
+        public int argsCheck(String[] args) {
+                if(args[args.length - 2].equals(">")) return 1;
+                else if(args[args.length - 2].equals(">>")) return 2;
+                else return 0;
+            }
+
+            public void mkdir(String[] arg) {
+
+            }
+
+
+
+
+
+    public static void main(String[] args){}
 }
