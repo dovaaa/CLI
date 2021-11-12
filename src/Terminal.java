@@ -1,32 +1,41 @@
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Scanner;
 
 class Parser {
-
+    int type;
     String commandName;
     String[] args;
-
+    String fileName;
     //This method will divide the input into commandName and args
     //where "input" is the string command entered by the user
 
 
     public boolean parse(String input) {
         if (input.equals("")) return false;
-        String[] list = input.split(" ");
-        commandName = list[0];
-        args = new String[list.length];
-        for (int i = 0; i < list.length; i++) {
-            args[i] = list[i];
-        }
+
+        args = input.split(" ");
+        commandName = args[0];
+//        if (args.length > 1)
+            args = Arrays.copyOfRange(args, 1, args.length);
+
+        if (args.length <= 1) type = 0;
+        else if (args[args.length - 2].equals(">")) type = 1;
+        else if (args[args.length - 2].equals(">>")) type = 2;
+        else type = 0;
+
+        if (type != 0) argsCleaner();
         return true;
+    }
+
+    private void argsCleaner() {
+        fileName = args[args.length - 1];
+        this.args = Arrays.copyOfRange(args, 0, args.length - 2);
     }
 
     public String getCommandName() {
@@ -36,6 +45,15 @@ class Parser {
     public String[] getArgs() {
         return args;
     }
+
+    public int getType() {
+        return type;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
 
 }
 
@@ -51,14 +69,19 @@ public class Terminal {
 
     public String echo(String[] arg) {
         String ret = "";
-        for (int i = 1; i < arg.length; ++i) {
+        for (int i = 0; i < arg.length; ++i) {
             ret += arg[i] + ' ';
         }
         return ret;
     }
 
     public String pwd() {
-        return file.getPath();
+        String ret = file.getPath() + " ";
+        String[] arg = parser.getArgs();
+        for (int i = 0; i < arg.length; i++) {
+            ret += arg[i] + " ";
+        }
+        return ret;
     }
 
     public void cd() {
@@ -67,7 +90,7 @@ public class Terminal {
 
     public boolean cd(String arg) {
         if (arg.equals("..")) {
-            file = new File(file.getPath() + File.separator + ".." + File.separator);
+            file = new File(file.getPath() + File.separator + ".." );
         } else {
             if (new File(arg).isAbsolute()) {
                 File f = new File(arg);
@@ -94,6 +117,7 @@ public class Terminal {
         for (int i = 0; i < stringsList.length; ++i) {
             ret += stringsList[i] + '\n';
         }
+
         return ret;
     }
 
@@ -164,11 +188,56 @@ public class Terminal {
         return created;
     }
 
-    public void cp(String arg1, String arg2) throws IOException {
-        File f1 = new File(arg1);
-        File f2 = new File(arg2);
-        Files.copy(f1.toPath(), f2.toPath());
+    public void cp(String arg1, String arg2) throws IOException { //TODO fix parameters number ie. dont crash in outputExecution()
+        BufferedReader f = new BufferedReader(new FileReader(arg1));
+        FileOutputStream fos = new FileOutputStream(arg2,true);
+        String Temp = "", str = "";
+        while ((Temp = f.readLine()) != null) {
+            str += Temp+'\n';
+        }
+        fos.write(str.getBytes());
+        fos.close();
+
+
     }
+
+    public void cp_r(String arg1, String arg2) throws IOException {
+
+    }
+
+    public void rm(String arg) {
+        File f = new File(arg);
+        if (f.isFile()) f.delete();
+    }
+
+    public String cat(String[] args) throws IOException {
+        if (args.length == 1) {
+            BufferedReader f = new BufferedReader(new FileReader(args[0]));
+            String Temp = "", str = "";
+            while ((Temp = f.readLine()) != null) {
+                str += Temp+'\n';
+            }
+            return str;
+        } else if (args.length == 2) {
+            BufferedReader f = new BufferedReader(new FileReader(args[0]));
+            BufferedReader c = new BufferedReader(new FileReader(args[1]));
+            String Temp = "", str = "";
+            while ((Temp = f.readLine()) != null) {
+                str += Temp+'\n';
+            }
+
+            while ((Temp = c.readLine()) != null) {
+                str += Temp+'\n';
+            }
+            return str;
+        }
+        return "";
+    }
+
+    void exit() {
+        System.exit(0);
+    }
+
 
     void outputExecution(String output, int type) throws IOException {
         String[] args = parser.getArgs();
@@ -176,24 +245,12 @@ public class Terminal {
         if (type == 0) {
             System.out.println(output);
         } else if (type == 1) {
-            FileWriter fileWriter = new FileWriter(args[args.length - 1]);
-            String[] str = output.split(" ");
-            String[] sub = Arrays.copyOfRange(str,0,str.length-2);
-            output="";
-            for(String in:sub){
-                output+=in+" ";
-            }
+            FileWriter fileWriter = new FileWriter(file.getPath()+File.separator+parser.getFileName());
             fileWriter.write(output + '\n');
             fileWriter.close();
         } else {
-            FileOutputStream fos = new FileOutputStream(args[args.length - 1], true);
-            String[] str = output.split(" ");
-            String[] sub = Arrays.copyOfRange(str,0,str.length-2);
-            output="";
-            for(String in:sub){
-                output+=in+" ";
-            }
-            output+="\n";
+            FileOutputStream fos = new FileOutputStream(file.getPath()+File.separator+parser.getFileName(), true);
+            output += "\n";
             fos.write(output.getBytes());
             fos.close();
         }
@@ -206,56 +263,77 @@ public class Terminal {
 
         switch (command) {
             case "echo":
-                outputExecution(echo(args), argsCheck(args));
+                outputExecution(echo(args), parser.getType());
                 break;
             case "pwd":
-                outputExecution(pwd(),argsCheck(args));
+                outputExecution(pwd(), parser.getType());
                 break;
             case "cd":
-                if(args.length==0){
+                if (args.length == 0) {
                     cd();
-                }else{
-                    cd(args[1]);
+                } else {
+                    cd(args[0]);
                 }
                 break;
             case "ls":
-                if(args.length==0){
-                    outputExecution(ls(),argsCheck(args));
-                }else{
-                    outputExecution(ls_r(),argsCheck(args));
+                if (args.length == 0) {
+                    outputExecution(ls(), parser.getType());
+                } else {
+                    if (args[0].equals("-r"))
+                        outputExecution(ls_r(), parser.getType());
+                    else {
+                        outputExecution(ls(), parser.getType());
+                    }
                 }
                 break;
             case "mkdir":
                 mkdir(args);
                 break;
             case "rmdir":
-                rmdir(args[1]);
+                rmdir(args[0]);
                 break;
             case "touch":
-
+                touch(args[0]);
                 break;
             case "cp":
+                if (!args[0].equals("-r")) cp(args[0], args[1]);
+                else {
+                    cp(args[0],args[1]);
+                }
                 break;
             case "rm":
+                rm(args[0]);
                 break;
             case "cat":
+                outputExecution(cat(args), parser.getType());
                 break;
+            case "exit":
+                exit();
             default:
                 System.out.println("No valid Command");
 
         }
     }
 
-    public int argsCheck(String[] args) {
-        if (args[args.length - 2].equals(">")) return 1;
-        else if (args[args.length - 2].equals(">>")) return 2;
-        else return 0;
-    }
+//    public int argsCheck(String[] args) {
+//        if (args.length == 1) return 0;
+//        if (args[args.length - 2].equals(">")) return 1;
+//        else if (args[args.length - 2].equals(">>")) return 2;
+//        else return 0;
+//    }
 
 
     public static void main(String[] args) throws IOException {
+        Scanner sc = new Scanner(System.in);
+
+        String inp;
         Terminal terminal = new Terminal();
-        terminal.parser.parse("echo Hello World >> echo.txt");
-        terminal.chooseCommandAction();
+
+        while (true) {
+            System.out.print(">");
+            inp = sc.nextLine();
+            terminal.parser.parse(inp);
+            terminal.chooseCommandAction();
+        }
     }
 }
