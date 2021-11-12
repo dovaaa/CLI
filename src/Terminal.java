@@ -87,6 +87,9 @@ public class Terminal {
         }
         return ret;
     }
+    public void mkdir(String[] arg) {
+
+    }
 
     //This method will choose the suitable command method to be called
     public void chooseCommandAction() throws IOException {
@@ -136,7 +139,7 @@ public class Terminal {
             default:
                 System.out.println("No valid Command");
 
-        }
+            }
         }
         public int argsCheck(String[] args) {
                 if(args[args.length - 2].equals(">")) return 1;
@@ -144,13 +147,15 @@ public class Terminal {
                 else return 0;
             }
 
-            public void mkdir(String[] arg) {
-
-            }
 
 
 
 
 
-    public static void main(String[] args){}
+
+    public static void main(String[] args) throws IOException {
+        Terminal terminal=new Terminal();
+        terminal.parser.parse("echo Hello World");
+        terminal.chooseCommandAction();
+    }
 }
