@@ -213,27 +213,27 @@ public class Terminal {
             }
 
             for (String file : files) {
-                File srcFile = new File(source, file);
-                File destFile = new File(destination, file);
+                File sourceFile = new File(source, file);
+                File destinationFile = new File(destination, file);
 
-                cp_r(srcFile, destFile);
+                cp_r(sourceFile, destinationFile);
             }
 
         } else {
 
-            InputStream in = null;
-            OutputStream out = null;
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
 
             try {
 
-                in = new FileInputStream(source);
-                out = new FileOutputStream(destination);
+                inputStream = new FileInputStream(source);
+                outputStream = new FileOutputStream(destination);
 
                 byte[] buffer = new byte[1024];
 
                 int length;
-                while ((length = in.read(buffer)) > 0) {
-                    out.write(buffer, 0, length);
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
                 }
 
             } catch (IOException e) {
@@ -241,12 +241,12 @@ public class Terminal {
                 System.err.println("IO errors : " + e.getMessage());
 
             } finally {
-                if (in != null) {
-                    in.close();
+                if (inputStream != null) {
+                    inputStream.close();
                 }
 
-                if (out != null) {
-                    out.close();
+                if (outputStream != null) {
+                    outputStream.close();
                 }
             }
         }
