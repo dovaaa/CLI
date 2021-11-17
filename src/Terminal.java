@@ -1,11 +1,10 @@
 import java.io.*;
 import java.lang.reflect.Array;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Scanner;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
+
+import static java.nio.file.FileVisitResult.CONTINUE;
 
 class Parser {
     int type;
@@ -22,7 +21,7 @@ class Parser {
         args = input.split(" ");
         commandName = args[0];
 //        if (args.length > 1)
-            args = Arrays.copyOfRange(args, 1, args.length);
+        args = Arrays.copyOfRange(args, 1, args.length);
 
         if (args.length <= 1) type = 0;
         else if (args[args.length - 2].equals(">")) type = 1;
@@ -90,7 +89,7 @@ public class Terminal {
 
     public boolean cd(String arg) {
         if (arg.equals("..")) {
-            file = new File(file.getPath() + File.separator + ".." );
+            file = new File(file.getParent());
         } else {
             if (new File(arg).isAbsolute()) {
                 File f = new File(arg);
@@ -190,10 +189,10 @@ public class Terminal {
 
     public void cp(String arg1, String arg2) throws IOException { //TODO fix parameters number ie. dont crash in outputExecution()
         BufferedReader f = new BufferedReader(new FileReader(arg1));
-        FileOutputStream fos = new FileOutputStream(arg2,true);
+        FileOutputStream fos = new FileOutputStream(arg2, true);
         String Temp = "", str = "";
         while ((Temp = f.readLine()) != null) {
-            str += Temp+'\n';
+            str += Temp + '\n';
         }
         fos.write(str.getBytes());
         fos.close();
@@ -201,9 +200,58 @@ public class Terminal {
 
     }
 
-    public void cp_r(String arg1, String arg2) throws IOException {
+    public void cp_r(File source, File destination) throws IOException {
+        if (source.isDirectory()) {
 
+            if (!destination.exists()) {
+                destination.mkdir();
+            }
+
+            String[] files = source.list();
+            if (files == null) {
+                return;
+            }
+
+            for (String file : files) {
+                File sourceFile = new File(source, file);
+                File destinationFile = new File(destination, file);
+
+                cp_r(sourceFile, destinationFile);
+            }
+
+        } else {
+
+            InputStream inputStream = null;
+            OutputStream outputStream = null;
+
+            try {
+
+                inputStream = new FileInputStream(source);
+                outputStream = new FileOutputStream(destination);
+
+                byte[] buffer = new byte[1024];
+
+                int length;
+                while ((length = inputStream.read(buffer)) > 0) {
+                    outputStream.write(buffer, 0, length);
+                }
+
+            } catch (IOException e) {
+
+                System.err.println("IO errors : " + e.getMessage());
+
+            } finally {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+        }
     }
+
 
     public void rm(String arg) {
         File f = new File(arg);
@@ -215,7 +263,7 @@ public class Terminal {
             BufferedReader f = new BufferedReader(new FileReader(args[0]));
             String Temp = "", str = "";
             while ((Temp = f.readLine()) != null) {
-                str += Temp+'\n';
+                str += Temp + '\n';
             }
             return str;
         } else if (args.length == 2) {
@@ -223,11 +271,11 @@ public class Terminal {
             BufferedReader c = new BufferedReader(new FileReader(args[1]));
             String Temp = "", str = "";
             while ((Temp = f.readLine()) != null) {
-                str += Temp+'\n';
+                str += Temp + '\n';
             }
 
             while ((Temp = c.readLine()) != null) {
-                str += Temp+'\n';
+                str += Temp + '\n';
             }
             return str;
         }
@@ -245,11 +293,11 @@ public class Terminal {
         if (type == 0) {
             System.out.println(output);
         } else if (type == 1) {
-            FileWriter fileWriter = new FileWriter(file.getPath()+File.separator+parser.getFileName());
+            FileWriter fileWriter = new FileWriter(file.getPath() + File.separator + parser.getFileName());
             fileWriter.write(output + '\n');
             fileWriter.close();
         } else {
-            FileOutputStream fos = new FileOutputStream(file.getPath()+File.separator+parser.getFileName(), true);
+            FileOutputStream fos = new FileOutputStream(file.getPath() + File.separator + parser.getFileName(), true);
             output += "\n";
             fos.write(output.getBytes());
             fos.close();
@@ -298,7 +346,9 @@ public class Terminal {
             case "cp":
                 if (!args[0].equals("-r")) cp(args[0], args[1]);
                 else {
-                    cp(args[0],args[1]);
+                    File source = new File(args[1]);
+                    File destination = new File(args[2]);
+                    cp_r(source, destination);
                 }
                 break;
             case "rm":
