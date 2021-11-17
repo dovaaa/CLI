@@ -1,5 +1,11 @@
 import java.io.*;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Scanner;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -162,7 +168,9 @@ public class Terminal {
             }
             if (f.exists()) {
                 if (f.length() == 0) {
-                    f.delete();
+                    if(f.delete()){
+                        return ret;
+                    }else System.out.println("Not Deleted");
                 } else {
                     ret = arg + " is not empty.";
                 }
@@ -188,8 +196,20 @@ public class Terminal {
     }
 
     public void cp(String arg1, String arg2) throws IOException { //TODO fix parameters number ie. dont crash in outputExecution()
-        BufferedReader f = new BufferedReader(new FileReader(arg1));
-        FileOutputStream fos = new FileOutputStream(arg2, true);
+        File a, b;
+        if (new File(arg1).isAbsolute()) {
+            a = new File(arg1);
+        } else {
+            a = new File(file.getPath() + File.separator + arg1);
+        }
+        if (new File(arg2).isAbsolute()) {
+            b = new File(arg2);
+        } else {
+            b = new File(file.getPath() + File.separator + arg2);
+        }
+
+        BufferedReader f = new BufferedReader(new FileReader(a));
+        FileOutputStream fos = new FileOutputStream(b, true);
         String Temp = "", str = "";
         while ((Temp = f.readLine()) != null) {
             str += Temp + '\n';
@@ -254,23 +274,62 @@ public class Terminal {
 
 
     public void rm(String arg) {
-        File f = new File(arg);
-        if (f.isFile()) f.delete();
+        File f;
+        if (new File(arg).isAbsolute()) {
+            f = new File(arg);
+        } else {
+            f = new File(file.getPath() + File.separator + arg);
+        }
+        if (f.isFile()) {
+            if (f.delete()) {
+                return;
+            } else {
+                System.out.println("File Not empty");
+                return;
+            }
+        } else {
+            System.out.println("Argument Not a File");
+            return;
+        }
     }
 
     public String cat(String[] args) throws IOException {
+        File f;
+        File g;
         if (args.length == 1) {
-            BufferedReader f = new BufferedReader(new FileReader(args[0]));
-            String Temp = "", str = "";
-            while ((Temp = f.readLine()) != null) {
-                str += Temp + '\n';
+
+            if (new File(args[0]).isAbsolute()) {
+                f = new File(args[0]);
+            } else {
+                f = new File(file.getPath() + File.separator + args[0]);
             }
-            return str;
+            try {
+                BufferedReader z = new BufferedReader(new FileReader(f));
+
+                String Temp = "", str = "";
+                while ((Temp = z.readLine()) != null) {
+                    str += Temp + '\n';
+                }
+                return str;
+            } catch (FileNotFoundException e) {
+                System.out.println("No Such File!");
+            }
         } else if (args.length == 2) {
-            BufferedReader f = new BufferedReader(new FileReader(args[0]));
-            BufferedReader c = new BufferedReader(new FileReader(args[1]));
+
+            if (new File(args[0]).isAbsolute()) {
+                f = new File(args[0]);
+            } else {
+                f = new File(file.getPath() + File.separator + args[0]);
+            }
+            if (new File(args[0]).isAbsolute()) {
+                g = new File(args[1]);
+            } else {
+                g = new File(file.getPath() + File.separator + args[1]);
+            }
+            BufferedReader z = new BufferedReader(new FileReader(f));
+            BufferedReader c = new BufferedReader(new FileReader(g));
             String Temp = "", str = "";
-            while ((Temp = f.readLine()) != null) {
+            while ((Temp = z.readLine()) != null) {
                 str += Temp + '\n';
             }
 
@@ -344,11 +403,20 @@ public class Terminal {
                 touch(args[0]);
                 break;
             case "cp":
-                if (!args[0].equals("-r")) cp(args[0], args[1]);
-                else {
+                if (!args[0].equals("-r")) {
+                    try {
+                        cp(args[0], args[1]);
+                    } catch (IndexOutOfBoundsException e) {
+                        System.out.println("Invalid Parameters Needed: File1 File2");
+                    }
+                } else {
                     File source = new File(args[1]);
                     File destination = new File(args[2]);
-                    cp_r(source, destination);
+                    try {
+                        cp_r(source, destination);
+                    } catch (IndexOutOfBoundsException E) {
+                        System.out.println("Invalid Parameters Needed: File1 File2");
+                    }
                 }
                 break;
             case "rm":
